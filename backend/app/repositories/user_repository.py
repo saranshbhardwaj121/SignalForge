@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -9,7 +11,7 @@ class UserRepository(BaseRepository[User]):
     def __init__(self, session: Session) -> None:
         super().__init__(session, User)
 
-    def get_by_id(self, user_id: str) -> User | None:
+    def get_by_id(self, user_id: UUID | str) -> User | None:
         return self.session.get(User, user_id)
 
     def get_by_username(self, username: str) -> User | None:

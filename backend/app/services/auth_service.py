@@ -1,8 +1,15 @@
 from datetime import datetime, timezone
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from backend.app.core.security import create_access_token, hash_password, verify_password
+from backend.app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    hash_password,
+    verify_password,
+)
 from backend.app.models.user import User
 from backend.app.repositories.user_repository import UserRepository
 
@@ -41,3 +48,18 @@ class AuthService:
 
     def issue_access_token(self, user: User) -> str:
         return create_access_token(subject=str(user.id))
+
+    def issue_refresh_token(self, user: User) -> str:
+        return create_refresh_token(subject=str(user.id))
+
+    def user_from_refresh_token(self, refresh_token: str) -> User:
+        payload = decode_token(refresh_token)
+        token_type = payload.get("type")
+        subject = payload.get("sub")
+        if token_type != "refresh" or subject is None:
+            raise ValueError("Invalid refresh token")
+
+        user = self.users.get_by_id(UUID(subject))
+        if user is None or not user.is_active:
+            raise ValueError("Invalid refresh token")
+        return user
