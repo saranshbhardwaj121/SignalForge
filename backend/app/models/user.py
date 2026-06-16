@@ -19,3 +19,8 @@ class User(TimestampMixin, Base):
 
     watchlists = relationship("Watchlist", back_populates="user", cascade="all, delete-orphan")
     trades = relationship("Trade", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship(
+        "RefreshToken",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
