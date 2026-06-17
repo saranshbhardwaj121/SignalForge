@@ -1,4 +1,5 @@
 from uuid import uuid4
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,6 +11,21 @@ from backend.app.core.config import get_settings
 from backend.app.main import app
 from backend.app.models.base import Base
 from backend.app.models.user import User
+
+
+class FakeTicker:
+    def __init__(
+        self,
+        fast_info: dict[str, object] | None = None,
+        info: dict[str, object] | None = None,
+        history_frame: object | None = None,
+    ) -> None:
+        self.fast_info = fast_info or {}
+        self.info = info or {}
+        self._history_frame = history_frame
+
+    def history(self, **_: object) -> object:
+        return self._history_frame
 
 settings = get_settings()
 engine = create_engine(settings.database_url)
@@ -576,3 +592,215 @@ def test_remove_ticker_from_others_watchlist_returns_404(
         headers=_auth_header(token2),
     )
     assert resp.status_code == 404
+
+
+# --- Watchlist Quotes ---
+
+
+def test_watchlist_quotes_unauthenticated_returns_401(client: TestClient) -> None:
+    watchlist_id = "00000000-0000-0000-0000-000000000000"
+    resp = client.get(f"/api/v1/watchlists/{watchlist_id}/quotes")
+    assert resp.status_code == 401
+
+
+def test_watchlist_quotes_others_watchlist_returns_404(client: TestClient) -> None:
+    token1, _, _ = _register_and_login(client)
+    token2, _, _ = _register_and_login(client)
+    create_resp = client.post(
+        "/api/v1/watchlists",
+        json={"name": "Private"},
+        headers=_auth_header(token1),
+    )
+    watchlist_id = create_resp.json()["id"]
+    resp = client.get(
+        f"/api/v1/watchlists/{watchlist_id}/quotes",
+        headers=_auth_header(token2),
+    )
+    assert resp.status_code == 404
+
+
+def test_watchlist_quotes_nonexistent_returns_404(client: TestClient) -> None:
+    token, _, _ = _register_and_login(client)
+    fake_id = "00000000-0000-0000-0000-000000000000"
+    resp = client.get(
+        f"/api/v1/watchlists/{fake_id}/quotes",
+        headers=_auth_header(token),
+    )
+    assert resp.status_code == 404
+
+
+def test_watchlist_quotes_empty_watchlist_returns_empty_quotes(
+    client: TestClient,
+) -> None:
+    token, _, _ = _register_and_login(client)
+    create_resp = client.post(
+        "/api/v1/watchlists",
+        json={"name": "Empty"},
+        headers=_auth_header(token),
+    )
+    watchlist_id = create_resp.json()["id"]
+    resp = client.get(
+        f"/api/v1/watchlists/{watchlist_id}/quotes",
+        headers=_auth_header(token),
+    )
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert payload["quotes"] == []
+    assert payload["watchlist_id"] == watchlist_id
+    assert payload["watchlist_name"] == "Empty"
+
+
+def test_watchlist_quotes_returns_all_tickers(client: TestClient) -> None:
+    token, _, _ = _register_and_login(client)
+    create_resp = client.post(
+        "/api/v1/watchlists",
+        json={"name": "Tech"},
+        headers=_auth_header(token),
+    )
+    watchlist_id = create_resp.json()["id"]
+    for ticker in ["AAPL", "MSFT", "GOOG"]:
+        client.post(
+            f"/api/v1/watchlists/{watchlist_id}/items",
+            json={"ticker": ticker},
+            headers=_auth_header(token),
+        )
+
+    fake = FakeTicker(
+        fast_info={
+            "last_price": 150.0,
+            "previous_close": 148.0,
+            "open": 149.0,
+            "day_high": 152.0,
+            "day_low": 148.5,
+            "last_volume": 50000,
+            "currency": "USD",
+            "exchange": "NMS",
+        },
+        info={"shortName": "Test Corp"},
+    )
+    with patch(
+        "backend.app.services.market_data_service.yf.Ticker",
+        return_value=fake,
+    ):
+        resp = client.get(
+            f"/api/v1/watchlists/{watchlist_id}/quotes",
+            headers=_auth_header(token),
+        )
+
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert len(payload["quotes"]) == 3
+    assert payload["watchlist_name"] == "Tech"
+    tickers = [q["ticker"] for q in payload["quotes"]]
+    assert tickers == ["AAPL", "GOOG", "MSFT"]
+
+
+def test_watchlist_quotes_deterministic_order(client: TestClient) -> None:
+    token, _, _ = _register_and_login(client)
+    create_resp = client.post(
+        "/api/v1/watchlists",
+        json={"name": "Mixed"},
+        headers=_auth_header(token),
+    )
+    watchlist_id = create_resp.json()["id"]
+    for ticker in ["MSFT", "AAPL", "GOOG"]:
+        client.post(
+            f"/api/v1/watchlists/{watchlist_id}/items",
+            json={"ticker": ticker},
+            headers=_auth_header(token),
+        )
+
+    fake = FakeTicker(
+        fast_info={"last_price": 100.0},
+        info={},
+    )
+    with patch(
+        "backend.app.services.market_data_service.yf.Ticker",
+        return_value=fake,
+    ):
+        resp = client.get(
+            f"/api/v1/watchlists/{watchlist_id}/quotes",
+            headers=_auth_header(token),
+        )
+
+    assert resp.status_code == 200
+    tickers = [q["ticker"] for q in resp.json()["quotes"]]
+    assert tickers == ["AAPL", "GOOG", "MSFT"]
+
+
+def test_watchlist_quotes_partial_provider_failure(client: TestClient) -> None:
+    token, _, _ = _register_and_login(client)
+    create_resp = client.post(
+        "/api/v1/watchlists",
+        json={"name": "Mixed"},
+        headers=_auth_header(token),
+    )
+    watchlist_id = create_resp.json()["id"]
+    for ticker in ["AAPL", "BROKEN", "MSFT"]:
+        client.post(
+            f"/api/v1/watchlists/{watchlist_id}/items",
+            json={"ticker": ticker},
+            headers=_auth_header(token),
+        )
+
+    def fake_ticker_factory(ticker: str) -> FakeTicker:
+        if ticker == "BROKEN":
+            raise RuntimeError("provider error")
+        return FakeTicker(
+            fast_info={"last_price": 200.0},
+            info={"shortName": "Works"},
+        )
+
+    with patch(
+        "backend.app.services.market_data_service.yf.Ticker",
+        side_effect=fake_ticker_factory,
+    ):
+        resp = client.get(
+            f"/api/v1/watchlists/{watchlist_id}/quotes",
+            headers=_auth_header(token),
+        )
+
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert len(payload["quotes"]) == 3
+    assert payload["quotes"][0]["ticker"] == "AAPL"
+    assert payload["quotes"][0]["price"] == 200.0
+    assert payload["quotes"][0]["error"] is None
+    assert payload["quotes"][1]["ticker"] == "BROKEN"
+    assert payload["quotes"][1]["price"] is None
+    assert payload["quotes"][1]["error"] is not None
+    assert payload["quotes"][2]["ticker"] == "MSFT"
+    assert payload["quotes"][2]["price"] == 200.0
+    assert payload["quotes"][2]["error"] is None
+
+
+def test_watchlist_quotes_all_provider_failures(client: TestClient) -> None:
+    token, _, _ = _register_and_login(client)
+    create_resp = client.post(
+        "/api/v1/watchlists",
+        json={"name": "AllBad"},
+        headers=_auth_header(token),
+    )
+    watchlist_id = create_resp.json()["id"]
+    for ticker in ["AAPL", "MSFT"]:
+        client.post(
+            f"/api/v1/watchlists/{watchlist_id}/items",
+            json={"ticker": ticker},
+            headers=_auth_header(token),
+        )
+
+    with patch(
+        "backend.app.services.market_data_service.yf.Ticker",
+        side_effect=RuntimeError("provider down"),
+    ):
+        resp = client.get(
+            f"/api/v1/watchlists/{watchlist_id}/quotes",
+            headers=_auth_header(token),
+        )
+
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert len(payload["quotes"]) == 2
+    for q in payload["quotes"]:
+        assert q["error"] is not None
+        assert q["price"] is None

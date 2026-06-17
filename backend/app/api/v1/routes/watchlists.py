@@ -8,6 +8,7 @@ from backend.app.models.user import User
 from backend.app.schemas.watchlist import (
     WatchlistCreate,
     WatchlistItemCreate,
+    WatchlistQuotesResponse,
     WatchlistRead,
     WatchlistUpdate,
 )
@@ -52,6 +53,24 @@ def get_watchlist(
     try:
         watchlist = service.get_watchlist(current_user, watchlist_id)
         return WatchlistRead.model_validate(watchlist)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
+
+
+@router.get(
+    "/{watchlist_id}/quotes",
+    response_model=WatchlistQuotesResponse,
+)
+def get_watchlist_quotes(
+    watchlist_id: UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> WatchlistQuotesResponse:
+    service = WatchlistService(session)
+    try:
+        return service.get_watchlist_quotes(current_user, watchlist_id)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)

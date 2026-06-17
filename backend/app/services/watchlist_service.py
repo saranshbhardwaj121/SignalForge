@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
@@ -7,6 +8,12 @@ from backend.app.models.user import User
 from backend.app.models.watchlist import Watchlist
 from backend.app.models.watchlist_item import WatchlistItem
 from backend.app.repositories.watchlist_repository import WatchlistRepository
+from backend.app.schemas.watchlist import WatchlistQuoteItemRead, WatchlistQuotesResponse
+from backend.app.services.market_data_service import (
+    MarketDataProviderError,
+    MarketDataService,
+    MarketDataValidationError,
+)
 
 
 class WatchlistService:
@@ -45,6 +52,54 @@ class WatchlistService:
         if watchlist is None:
             raise ValueError("Watchlist not found")
         return watchlist
+
+    def get_watchlist_quotes(self, user: User, watchlist_id: UUID) -> WatchlistQuotesResponse:
+        watchlist = self.get_watchlist(user, watchlist_id)
+        fetched_at = datetime.now(timezone.utc)
+        market_data_service = MarketDataService(self.session)
+
+        seen: set[str] = set()
+        unique_ordered_tickers: list[str] = []
+        for item in watchlist.items:
+            if item.ticker not in seen:
+                seen.add(item.ticker)
+                unique_ordered_tickers.append(item.ticker)
+
+        quotes: list[WatchlistQuoteItemRead] = []
+        for ticker in unique_ordered_tickers:
+            try:
+                quote = market_data_service.get_quote(ticker)
+                quotes.append(
+                    WatchlistQuoteItemRead(
+                        ticker=quote.ticker,
+                        name=quote.name,
+                        currency=quote.currency,
+                        price=quote.price,
+                        previous_close=quote.previous_close,
+                        open=quote.open,
+                        day_high=quote.day_high,
+                        day_low=quote.day_low,
+                        volume=quote.volume,
+                        market_cap=quote.market_cap,
+                        exchange=quote.exchange,
+                        provider=quote.provider,
+                        fetched_at=quote.fetched_at,
+                    )
+                )
+            except (MarketDataValidationError, MarketDataProviderError) as exc:
+                quotes.append(
+                    WatchlistQuoteItemRead(
+                        ticker=ticker,
+                        error=str(exc),
+                    )
+                )
+
+        return WatchlistQuotesResponse(
+            watchlist_id=watchlist.id,
+            watchlist_name=watchlist.name,
+            quotes=quotes,
+            fetched_at=fetched_at,
+        )
 
     def rename_watchlist(self, user: User, watchlist_id: UUID, name: str) -> Watchlist:
         name = self._normalize_name(name)

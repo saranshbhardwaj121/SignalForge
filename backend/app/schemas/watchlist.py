@@ -32,3 +32,27 @@ class WatchlistRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     items: list[WatchlistItemRead]
+
+
+class WatchlistQuoteItemRead(BaseModel):
+    ticker: str
+    name: str | None = None
+    currency: str | None = None
+    price: float | None = None
+    previous_close: float | None = None
+    open: float | None = None
+    day_high: float | None = None
+    day_low: float | None = None
+    volume: int | None = None
+    market_cap: int | None = None
+    exchange: str | None = None
+    provider: str | None = None
+    fetched_at: datetime | None = None
+    error: str | None = None
+
+
+class WatchlistQuotesResponse(BaseModel):
+    watchlist_id: UUID
+    watchlist_name: str
+    quotes: list[WatchlistQuoteItemRead]
+    fetched_at: datetime
