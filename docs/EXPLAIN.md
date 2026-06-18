@@ -786,3 +786,21 @@ Test Status:
 127 passed
 0 failed
 1 known Starlette warning
+
+Sprint 5B Status: COMPLETE
+
+Implemented:
+- Watchlist signal aggregation
+- GET /api/v1/watchlists/{watchlist_id}/signals
+- WatchlistSignalItemRead schema
+- WatchlistSignalsResponse schema
+- WatchlistService.get_watchlist_signals()
+- Ownership enforcement
+- Partial per-ticker failure handling
+- Deterministic ticker ordering
+- Watchlist signal integration tests
+
+Test Status:
+141 passed
+0 failed
+1 known Starlette warning
