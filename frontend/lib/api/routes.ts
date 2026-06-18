@@ -1,0 +1,33 @@
+export const API_ROUTES = {
+  AUTH: {
+    LOGIN: "/auth/login",
+    REGISTER: "/auth/register",
+    REFRESH: "/auth/refresh",
+    LOGOUT: "/auth/logout",
+    ME: "/auth/me",
+  },
+  WATCHLISTS: {
+    LIST: "/watchlists",
+    CREATE: "/watchlists",
+    DETAIL: (id: string) => `/watchlists/${id}`,
+    UPDATE: (id: string) => `/watchlists/${id}`,
+    DELETE: (id: string) => `/watchlists/${id}`,
+    ADD_TICKER: (id: string) => `/watchlists/${id}/items`,
+    REMOVE_TICKER: (id: string, ticker: string) => `/watchlists/${id}/items/${ticker}`,
+    QUOTES: (id: string) => `/watchlists/${id}/quotes`,
+    SIGNALS: (id: string) => `/watchlists/${id}/signals`,
+  },
+  MARKET_DATA: {
+    QUOTE: (ticker: string) => `/market-data/quote/${ticker}`,
+    HISTORY: (ticker: string) => `/market-data/history/${ticker}`,
+  },
+  ANALYTICS: {
+    SMA: (ticker: string) => `/analytics/${ticker}/sma`,
+    EMA: (ticker: string) => `/analytics/${ticker}/ema`,
+    RSI: (ticker: string) => `/analytics/${ticker}/rsi`,
+    MACD: (ticker: string) => `/analytics/${ticker}/macd`,
+  },
+  SIGNALS: {
+    TICKER: (ticker: string) => `/signals/${ticker}`,
+  },
+} as const;
