@@ -32,6 +32,10 @@ export async function clientFetch<T>(path: string, options?: RequestInit): Promi
     credentials: "include",
   });
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   if (!response.ok) {
     throw await parseErrorResponse(response);
   }
