@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   { label: "Watchlists", href: "/dashboard/watchlists", icon: <ListChecks className="h-4 w-4" /> },
   { label: "Market Data", href: "/dashboard/market-data", icon: <TrendingUp className="h-4 w-4" />, disabled: true },
   { label: "Analytics", href: "/dashboard/analytics", icon: <BarChart3 className="h-4 w-4" /> },
-  { label: "Signals", href: "/dashboard/signals", icon: <Signal className="h-4 w-4" />, disabled: true },
+  { label: "Signals", href: "/dashboard/signals", icon: <Signal className="h-4 w-4" /> },
   { label: "Settings", href: "/dashboard/settings", icon: <Settings className="h-4 w-4" />, disabled: true },
 ];
 

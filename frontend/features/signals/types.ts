@@ -23,3 +23,19 @@ export interface SignalSummary {
   fetched_at: string;
   generated_at: string;
 }
+
+export interface WatchlistSignalItem {
+  ticker: string;
+  summary: SignalSummary | null;
+  error: string | null;
+}
+
+export interface WatchlistSignalsResponse {
+  watchlist_id: string;
+  watchlist_name: string;
+  period: string;
+  interval: string;
+  parameters: Record<string, number>;
+  signals: WatchlistSignalItem[];
+  generated_at: string;
+}
