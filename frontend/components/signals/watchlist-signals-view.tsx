@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { SignalTickerRowCard } from "@/components/signals/signal-ticker-row-card";
+import { SignalDistributionChart } from "@/components/charts/signal-distribution-chart";
 import { SignalsWatchlistSkeleton } from "@/components/signals/signals-skeleton";
 import { SignalsErrorState } from "@/components/signals/signals-error-state";
 import { useWatchlistsQuery } from "@/features/watchlists/hooks";
@@ -75,7 +76,10 @@ export function WatchlistSignalsView({
           onRetry={() => query.refetch()}
         />
       ) : query.data ? (
-        <div className="space-y-2">
+        <div className="space-y-4">
+          {query.data.signals.length > 0 && (
+            <SignalDistributionChart signals={query.data.signals} />
+          )}
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               {query.data.generated_at
@@ -84,9 +88,11 @@ export function WatchlistSignalsView({
             </p>
           </div>
           {query.data.signals.length > 0 ? (
-            query.data.signals.map((item) => (
-              <SignalTickerRowCard key={item.ticker} item={item} />
-            ))
+            <div className="space-y-2">
+              {query.data.signals.map((item) => (
+                <SignalTickerRowCard key={item.ticker} item={item} />
+              ))}
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-8">
               No signals available

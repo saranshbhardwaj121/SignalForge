@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AnalyticsCardSkeleton } from "@/components/analytics/analytics-skeleton";
 import { AnalyticsCardErrorState } from "@/components/analytics/analytics-error-state";
+import { MacdChart } from "@/components/charts/macd-chart";
 import type { MacdResponse } from "@/features/analytics/types";
 
 interface MacdCardProps {
@@ -33,7 +34,7 @@ function getMacdInterpretation(latest: { macd: number | null; signal: number | n
 
   if (latest.macd > latest.signal) return { label: "Bullish Crossover", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800" };
   if (latest.macd < latest.signal) return { label: "Bearish Crossover", className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" };
-  return { label: "Neutral", className: "" };
+  return { label: "Neutral", className: "bg-muted text-muted-foreground" };
 }
 
 export function MacdCard({ query }: MacdCardProps) {
@@ -93,7 +94,12 @@ export function MacdCard({ query }: MacdCardProps) {
             <span className="text-sm font-medium tabular-nums">{formatValue(data.latest.histogram)}</span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-3">
+        {data.rows && data.rows.length > 0 && (
+          <div className="mt-3 mb-2">
+            <MacdChart data={data.rows} />
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground mt-1">
           Close: {formatValue(data.latest.close)} &middot; {data.latest.date}
         </p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">

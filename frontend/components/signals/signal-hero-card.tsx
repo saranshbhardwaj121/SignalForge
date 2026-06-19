@@ -3,14 +3,11 @@
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ConfidenceGauge } from "@/components/charts/confidence-gauge";
 import type { SignalSummary } from "@/features/signals/types";
 
 interface SignalHeroCardProps {
   data: SignalSummary;
-}
-
-function formatConfidence(value: number): string {
-  return `${(value * 100).toFixed(0)}%`;
 }
 
 function getConfidenceLabel(value: number): string {
@@ -44,7 +41,6 @@ function getSummarySentence(data: SignalSummary): string {
 export function SignalHeroCard({ data }: SignalHeroCardProps) {
   const isBuy = data.rating === "BUY";
   const isSell = data.rating === "SELL";
-  const confidencePercent = (data.confidence * 100).toFixed(0);
 
   const badgeClass = isBuy
     ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800"
@@ -57,12 +53,6 @@ export function SignalHeroCard({ data }: SignalHeroCardProps) {
     : isSell
     ? "border-red-200 dark:border-red-900"
     : "";
-
-  const barColor = isBuy
-    ? "bg-green-500 dark:bg-green-400"
-    : isSell
-    ? "bg-red-500 dark:bg-red-400"
-    : "bg-muted-foreground";
 
   return (
     <Card className={`border-2 ${borderClass}`}>
@@ -80,19 +70,8 @@ export function SignalHeroCard({ data }: SignalHeroCardProps) {
           {getSummarySentence(data)}
         </p>
 
-        <div className="flex items-center gap-8 mt-5">
-          <div className="flex flex-col items-center">
-            <span className="text-3xl font-bold tabular-nums">
-              {formatConfidence(data.confidence)}
-            </span>
-            <span className="text-xs text-muted-foreground mt-0.5">Confidence</span>
-            <div className="w-20 h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${barColor}`}
-                style={{ width: `${confidencePercent}%` }}
-              />
-            </div>
-          </div>
+        <div className="flex items-center gap-8 mt-4">
+          <ConfidenceGauge value={data.confidence} rating={data.rating} size={96} />
           <div className="flex flex-col items-center">
             <span className="text-xl font-semibold tabular-nums text-muted-foreground">
               {Math.abs(data.score)}/6

@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AnalyticsCardSkeleton } from "@/components/analytics/analytics-skeleton";
 import { AnalyticsCardErrorState } from "@/components/analytics/analytics-error-state";
+import { RsiChart } from "@/components/charts/rsi-chart";
+import { SmaChart } from "@/components/charts/sma-chart";
+import { EmaChart } from "@/components/charts/ema-chart";
 import type { IndicatorResponse } from "@/features/analytics/types";
 
 type IndicatorType = "rsi" | "sma" | "ema";
@@ -29,25 +32,40 @@ function formatValue(value: number | null | undefined): string {
   });
 }
 
-function getInterpretation(type: IndicatorType, latest: { value: number | null; close: number }): { label: string; variant: "default" | "secondary" | "outline" | "destructive"; className: string } {
+function getInterpretation(type: IndicatorType, latest: { value: number | null; close: number }): { label: string; className: string } {
   if (latest.value == null) {
-    return { label: "No data", variant: "outline", className: "" };
+    return { label: "No data", className: "" };
   }
 
   if (type === "rsi") {
-    if (latest.value <= 30) return { label: "Oversold", variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800" };
-    if (latest.value >= 70) return { label: "Overbought", variant: "destructive", className: "" };
-    return { label: "Neutral", variant: "secondary", className: "" };
+    if (latest.value <= 30) return { label: "Oversold", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800" };
+    if (latest.value >= 70) return { label: "Overbought", className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" };
+    return { label: "Neutral", className: "bg-muted text-muted-foreground" };
   }
 
   if (type === "sma" || type === "ema") {
     const diff = latest.close - latest.value;
-    if (diff > latest.value * 0.01) return { label: "Uptrend", variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800" };
-    if (diff < -latest.value * 0.01) return { label: "Downtrend", variant: "destructive", className: "" };
-    return { label: "Neutral", variant: "secondary", className: "" };
+    if (diff > latest.value * 0.01) return { label: "Uptrend", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800" };
+    if (diff < -latest.value * 0.01) return { label: "Downtrend", className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" };
+    return { label: "Neutral", className: "bg-muted text-muted-foreground" };
   }
 
-  return { label: "Neutral", variant: "secondary", className: "" };
+  return { label: "Neutral", className: "bg-muted text-muted-foreground" };
+}
+
+function ChartSection({ type, data }: { type: IndicatorType; data: IndicatorResponse }) {
+  if (!data.rows || data.rows.length === 0) return null;
+
+  switch (type) {
+    case "rsi":
+      return <RsiChart data={data.rows} />;
+    case "sma":
+      return <SmaChart data={data.rows} />;
+    case "ema":
+      return <EmaChart data={data.rows} />;
+    default:
+      return null;
+  }
 }
 
 export function IndicatorCard({ title, type, query }: IndicatorCardProps) {
@@ -98,7 +116,10 @@ export function IndicatorCard({ title, type, query }: IndicatorCardProps) {
         <p className="text-xs text-muted-foreground mt-1">
           Close: {formatValue(data.latest.close)} &middot; {data.latest.date}
         </p>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-3 mb-2">
+          <ChartSection type={type} data={data} />
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
           {Object.entries(data.parameters).map(([key, value]) => (
             <span key={key} className="capitalize">{key}: {value}</span>
           ))}

@@ -38,12 +38,19 @@ export function SignalTickerRowCard({ item }: SignalTickerRowCardProps) {
   const { summary } = item;
   const isBuy = summary.rating === "BUY";
   const isSell = summary.rating === "SELL";
+  const confidencePercent = (summary.confidence * 100).toFixed(0);
 
   const badgeClass = isBuy
     ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
     : isSell
     ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
     : "bg-muted text-muted-foreground";
+
+  const barColor = isBuy
+    ? "bg-green-500 dark:bg-green-400"
+    : isSell
+    ? "bg-red-500 dark:bg-red-400"
+    : "bg-muted-foreground";
 
   return (
     <Card>
@@ -54,9 +61,17 @@ export function SignalTickerRowCard({ item }: SignalTickerRowCardProps) {
         </div>
         <div className="flex items-center gap-4 text-sm text-muted-foreground shrink-0">
           <span className="tabular-nums">{Math.abs(summary.score)}/6</span>
-          <span className="font-medium tabular-nums">
-            {formatConfidence(summary.confidence)}
-          </span>
+          <div className="flex flex-col items-end">
+            <span className="font-medium tabular-nums">
+              {formatConfidence(summary.confidence)}
+            </span>
+            <div className="w-14 h-1 bg-muted rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full ${barColor}`}
+                style={{ width: `${confidencePercent}%` }}
+              />
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
