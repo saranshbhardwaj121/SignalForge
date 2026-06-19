@@ -13,9 +13,38 @@ function formatConfidence(value: number): string {
   return `${(value * 100).toFixed(0)}%`;
 }
 
+function getConfidenceLabel(value: number): string {
+  if (value >= 0.5) return "Strong";
+  if (value >= 0.3) return "Moderate";
+  return "Weak";
+}
+
+function getAgreementCount(data: SignalSummary): number {
+  const nonNeutral = data.signals.filter((s) => s.action !== "NEUTRAL");
+  return nonNeutral.length;
+}
+
+function getSummarySentence(data: SignalSummary): string {
+  const agreementCount = getAgreementCount(data);
+  const total = data.signals.length;
+  const label = getConfidenceLabel(data.confidence);
+  const rating = data.rating === "BUY" ? "buy" : data.rating === "SELL" ? "sell" : "neutral";
+
+  if (data.rating === "NEUTRAL") {
+    return `Neutral signal — ${total - agreementCount} of ${total} indicators are neutral`;
+  }
+
+  if (agreementCount === total) {
+    return `${label} ${rating} signal — all ${total} indicators agree`;
+  }
+
+  return `${label} ${rating} signal — ${agreementCount} of ${total} indicators agree`;
+}
+
 export function SignalHeroCard({ data }: SignalHeroCardProps) {
   const isBuy = data.rating === "BUY";
   const isSell = data.rating === "SELL";
+  const confidencePercent = (data.confidence * 100).toFixed(0);
 
   const badgeClass = isBuy
     ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800"
@@ -29,6 +58,12 @@ export function SignalHeroCard({ data }: SignalHeroCardProps) {
     ? "border-red-200 dark:border-red-900"
     : "";
 
+  const barColor = isBuy
+    ? "bg-green-500 dark:bg-green-400"
+    : isSell
+    ? "bg-red-500 dark:bg-red-400"
+    : "bg-muted-foreground";
+
   return (
     <Card className={`border-2 ${borderClass}`}>
       <CardContent className="flex flex-col items-center py-8 text-center">
@@ -41,12 +76,22 @@ export function SignalHeroCard({ data }: SignalHeroCardProps) {
           Signal
         </span>
 
+        <p className="text-sm mt-4 max-w-md text-muted-foreground">
+          {getSummarySentence(data)}
+        </p>
+
         <div className="flex items-center gap-8 mt-5">
           <div className="flex flex-col items-center">
             <span className="text-3xl font-bold tabular-nums">
               {formatConfidence(data.confidence)}
             </span>
             <span className="text-xs text-muted-foreground mt-0.5">Confidence</span>
+            <div className="w-20 h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${barColor}`}
+                style={{ width: `${confidencePercent}%` }}
+              />
+            </div>
           </div>
           <div className="flex flex-col items-center">
             <span className="text-xl font-semibold tabular-nums text-muted-foreground">

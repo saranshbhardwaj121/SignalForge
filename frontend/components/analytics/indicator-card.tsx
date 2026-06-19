@@ -7,8 +7,11 @@ import { AnalyticsCardSkeleton } from "@/components/analytics/analytics-skeleton
 import { AnalyticsCardErrorState } from "@/components/analytics/analytics-error-state";
 import type { IndicatorResponse } from "@/features/analytics/types";
 
+type IndicatorType = "rsi" | "sma" | "ema";
+
 interface IndicatorCardProps {
   title: string;
+  type: IndicatorType;
   query: {
     data: IndicatorResponse | undefined;
     isLoading: boolean;
@@ -26,7 +29,28 @@ function formatValue(value: number | null | undefined): string {
   });
 }
 
-export function IndicatorCard({ title, query }: IndicatorCardProps) {
+function getInterpretation(type: IndicatorType, latest: { value: number | null; close: number }): { label: string; variant: "default" | "secondary" | "outline" | "destructive"; className: string } {
+  if (latest.value == null) {
+    return { label: "No data", variant: "outline", className: "" };
+  }
+
+  if (type === "rsi") {
+    if (latest.value <= 30) return { label: "Oversold", variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800" };
+    if (latest.value >= 70) return { label: "Overbought", variant: "destructive", className: "" };
+    return { label: "Neutral", variant: "secondary", className: "" };
+  }
+
+  if (type === "sma" || type === "ema") {
+    const diff = latest.close - latest.value;
+    if (diff > latest.value * 0.01) return { label: "Uptrend", variant: "default", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800" };
+    if (diff < -latest.value * 0.01) return { label: "Downtrend", variant: "destructive", className: "" };
+    return { label: "Neutral", variant: "secondary", className: "" };
+  }
+
+  return { label: "Neutral", variant: "secondary", className: "" };
+}
+
+export function IndicatorCard({ title, type, query }: IndicatorCardProps) {
   const { data, isLoading, isError, error, refetch } = query;
 
   if (isLoading) {
@@ -52,13 +76,20 @@ export function IndicatorCard({ title, query }: IndicatorCardProps) {
     );
   }
 
+  const interpretation = getInterpretation(type, data.latest);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {data.cached && (
-          <Badge variant="outline" className="text-xs font-normal">Cached</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={`text-xs font-normal ${interpretation.className}`}>
+            {interpretation.label}
+          </Badge>
+          {data.cached && (
+            <Badge variant="outline" className="text-xs font-normal">Cached</Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold tabular-nums">

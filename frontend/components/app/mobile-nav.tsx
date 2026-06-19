@@ -27,10 +27,10 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: "Watchlists", href: "/dashboard/watchlists", icon: <ListChecks className="h-4 w-4" /> },
-  { label: "Market Data", href: "/dashboard/market-data", icon: <TrendingUp className="h-4 w-4" />, disabled: true },
+  { label: "Market Data", href: "/dashboard/market-data", icon: <TrendingUp className="h-4 w-4" /> },
   { label: "Analytics", href: "/dashboard/analytics", icon: <BarChart3 className="h-4 w-4" /> },
   { label: "Signals", href: "/dashboard/signals", icon: <Signal className="h-4 w-4" /> },
-  { label: "Settings", href: "/dashboard/settings", icon: <Settings className="h-4 w-4" />, disabled: true },
+  { label: "Settings", href: "/dashboard/settings", icon: <Settings className="h-4 w-4" /> },
 ];
 
 export function MobileNav() {

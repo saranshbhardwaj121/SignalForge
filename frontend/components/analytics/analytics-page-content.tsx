@@ -44,9 +44,9 @@ export function AnalyticsPageContent() {
         <AnalyticsEmptyState />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          <IndicatorCard title="RSI (14)" query={queries.rsiQuery} />
-          <IndicatorCard title="SMA (20)" query={queries.smaQuery} />
-          <IndicatorCard title="EMA (20)" query={queries.emaQuery} />
+          <IndicatorCard title="RSI (14)" type="rsi" query={queries.rsiQuery} />
+          <IndicatorCard title="SMA (20)" type="sma" query={queries.smaQuery} />
+          <IndicatorCard title="EMA (20)" type="ema" query={queries.emaQuery} />
           <MacdCard query={queries.macdQuery} />
         </div>
       )}

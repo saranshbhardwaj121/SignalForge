@@ -26,6 +26,16 @@ function formatValue(value: number | null | undefined): string {
   });
 }
 
+function getMacdInterpretation(latest: { macd: number | null; signal: number | null }): { label: string; className: string } {
+  if (latest.macd == null || latest.signal == null) {
+    return { label: "No data", className: "" };
+  }
+
+  if (latest.macd > latest.signal) return { label: "Bullish Crossover", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800" };
+  if (latest.macd < latest.signal) return { label: "Bearish Crossover", className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" };
+  return { label: "Neutral", className: "" };
+}
+
 export function MacdCard({ query }: MacdCardProps) {
   const { data, isLoading, isError, error, refetch } = query;
 
@@ -52,13 +62,20 @@ export function MacdCard({ query }: MacdCardProps) {
     );
   }
 
+  const interpretation = getMacdInterpretation(data.latest);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">MACD</CardTitle>
-        {data.cached && (
-          <Badge variant="outline" className="text-xs font-normal">Cached</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={`text-xs font-normal ${interpretation.className}`}>
+            {interpretation.label}
+          </Badge>
+          {data.cached && (
+            <Badge variant="outline" className="text-xs font-normal">Cached</Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-1.5">
