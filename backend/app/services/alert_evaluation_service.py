@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from backend.app.models.alert import Alert, TriggeredAlert
 from backend.app.repositories.alert_repository import AlertRepository, TriggeredAlertRepository
 from backend.app.services.market_data_service import MarketDataService, MarketDataProviderError, MarketDataValidationError
+from backend.app.services.notification_service import NotificationService
 from backend.app.services.signal_service import SignalService
 from backend.app.services.analytics_service import AnalyticsService
 
@@ -40,6 +41,7 @@ class AlertEvaluationService:
         self.market_data_service = MarketDataService(session)
         self.signal_service = SignalService(session)
         self.analytics_service = AnalyticsService(session)
+        self.notification_service = NotificationService(session)
 
     def evaluate_all_active_alerts(self) -> list[TriggeredAlert]:
         alerts = self.alert_repo.list_active()
@@ -126,6 +128,15 @@ class AlertEvaluationService:
                     )
                     self.trigger_repo.create(record)
                     triggered.append(record)
+                    self.notification_service.create_notification(
+                        user_id=alert.user_id,
+                        alert_id=alert.id,
+                        ticker=ticker,
+                        alert_type=alert.alert_type,
+                        triggered_value=current_value,
+                        threshold=alert.threshold,
+                        triggered_at=record.triggered_at,
+                    )
 
             except (MarketDataProviderError, MarketDataValidationError, ValueError) as exc:
                 import logging

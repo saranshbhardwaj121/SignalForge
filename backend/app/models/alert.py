@@ -29,6 +29,7 @@ class Alert(TimestampMixin, Base):
         cascade="all, delete-orphan",
         order_by="TriggeredAlert.triggered_at.desc()",
     )
+    notifications = relationship("Notification", back_populates="alert", cascade="all, delete-orphan")
 
 
 class TriggeredAlert(Base):

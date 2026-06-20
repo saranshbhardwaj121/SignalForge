@@ -27,4 +27,8 @@ export const queryKeys = {
     detail: (id: string) => ["alerts", id] as const,
     triggers: (id: string) => ["alerts", id, "triggers"] as const,
   },
+  notifications: {
+    list: (limit: number) => ["notifications", "list", limit] as const,
+    count: ["notifications", "count"] as const,
+  },
 } as const;

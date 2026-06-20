@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Moon, Sun, LogOut } from "lucide-react";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -65,6 +66,8 @@ export function TopBar() {
       </div>
 
       <div className="flex-1 sm:flex-none" />
+
+      <NotificationBell />
 
       {mounted && (
         <Button

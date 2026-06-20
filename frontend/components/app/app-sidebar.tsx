@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   LayoutDashboard,
@@ -16,6 +17,7 @@ import {
   Settings,
   ChevronLeft,
 } from "lucide-react";
+import { useUnreadCountQuery } from "@/features/notifications/hooks";
 
 interface NavItem {
   label: string;
@@ -41,6 +43,8 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed = false, onToggle }: AppSidebarProps) {
   const pathname = usePathname();
+  const { data: unreadCount } = useUnreadCountQuery();
+  const alertBadge = unreadCount?.count ?? 0;
 
   return (
     <aside
@@ -93,8 +97,30 @@ export function AppSidebar({ collapsed = false, onToggle }: AppSidebarProps) {
               </span>
             ) : (
               <Link href={item.href} className="flex items-center gap-3">
-                {item.icon}
-                {!collapsed && <span>{item.label}</span>}
+                {item.href === "/dashboard/alerts" && alertBadge > 0 ? (
+                  <div className="relative">
+                    {item.icon}
+                    <Badge
+                      variant="destructive"
+                      className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px]"
+                    >
+                      {alertBadge > 99 ? "99+" : alertBadge}
+                    </Badge>
+                  </div>
+                ) : (
+                  item.icon
+                )}
+                {!collapsed && (
+                  <span>{item.label}</span>
+                )}
+                {!collapsed && item.href === "/dashboard/alerts" && alertBadge > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="ml-auto h-5 px-1.5 text-[10px]"
+                  >
+                    {alertBadge > 99 ? "99+" : alertBadge}
+                  </Badge>
+                )}
               </Link>
             )}
           </Button>

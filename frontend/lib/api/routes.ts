@@ -39,4 +39,10 @@ export const API_ROUTES = {
     DELETE: (id: string) => `/alerts/${id}`,
     TRIGGERS: (id: string) => `/alerts/${id}/triggers`,
   },
+  NOTIFICATIONS: {
+    LIST: "/notifications",
+    COUNT: "/notifications/count",
+    MARK_READ: (id: string) => `/notifications/${id}/read`,
+    MARK_ALL_READ: "/notifications/read-all",
+  },
 } as const;

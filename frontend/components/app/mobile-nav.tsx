@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ import {
   Bell,
   Settings,
 } from "lucide-react";
+import { useUnreadCountQuery } from "@/features/notifications/hooks";
 
 interface NavItem {
   label: string;
@@ -38,6 +40,8 @@ const navItems: NavItem[] = [
 export function MobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const { data: unreadCount } = useUnreadCountQuery();
+  const alertBadge = unreadCount?.count ?? 0;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -72,8 +76,28 @@ export function MobileNav() {
                 </span>
               ) : (
                 <Link href={item.href} className="flex items-center gap-3">
-                  {item.icon}
+                  {item.href === "/dashboard/alerts" && alertBadge > 0 ? (
+                    <div className="relative">
+                      {item.icon}
+                      <Badge
+                        variant="destructive"
+                        className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px]"
+                      >
+                        {alertBadge > 99 ? "99+" : alertBadge}
+                      </Badge>
+                    </div>
+                  ) : (
+                    item.icon
+                  )}
                   <span>{item.label}</span>
+                  {item.href === "/dashboard/alerts" && alertBadge > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto h-5 px-1.5 text-[10px]"
+                    >
+                      {alertBadge > 99 ? "99+" : alertBadge}
+                    </Badge>
+                  )}
                 </Link>
               )}
             </Button>

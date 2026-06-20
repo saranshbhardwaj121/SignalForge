@@ -25,6 +25,7 @@ backend/app/models/__init__.py
 backend/app/models/alert.py
 backend/app/models/base.py
 backend/app/models/market_data.py
+backend/app/models/notification.py
 backend/app/models/refresh_token.py
 backend/app/models/trade.py
 backend/app/models/user.py
