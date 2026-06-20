@@ -1116,3 +1116,283 @@ Project Status:
 - Sprint 9A Complete
 - Sprint 9B Complete
 - Insique V1.1 Complete
+
+# Sprint 10B — Smart Search
+
+## Objective
+
+Upgrade Insique search from a basic ticker input into an intelligent stock discovery system.
+
+---
+
+## Problem Statement
+
+After Sprint 10A, users could navigate efficiently but still needed prior knowledge of ticker symbols.
+
+Examples:
+
+User knows:
+
+HDFCBANK.NS
+
+Search succeeds.
+
+User knows only:
+
+HDFC Bank
+
+Search fails.
+
+This created a discovery problem for new users.
+
+---
+
+## Features Implemented
+
+### Intelligent Autocomplete
+
+Added real-time ticker suggestions while typing.
+
+Examples:
+
+Input:
+
+hd
+
+Suggestions:
+
+* HDFCBANK.NS
+* HDFCLIFE.NS
+* HDFCAMC.NS
+
+---
+
+### Company Name Search
+
+Users can now search using company names instead of exact ticker symbols.
+
+Examples:
+
+Input:
+
+HDFC Bank
+
+Result:
+
+HDFCBANK.NS
+
+Input:
+
+Reliance
+
+Result:
+
+RELIANCE.NS
+
+Benefits:
+
+* Lower learning curve
+* Faster stock discovery
+
+---
+
+### Exchange Awareness
+
+Search results now display exchange information.
+
+Examples:
+
+* NSE (NS)
+* BSE (BO)
+
+Benefits:
+
+* Better ticker identification
+* Reduced ambiguity
+
+---
+
+### Search Suggestion Dropdown
+
+Implemented an interactive search results panel.
+
+Features:
+
+* Dynamic suggestions
+* Click-to-select
+* Keyboard navigation support
+* Loading states
+* Error states
+
+---
+
+### Search Provider Integration
+
+Integrated Yahoo Finance search infrastructure through backend proxy services.
+
+Benefits:
+
+* Large ticker coverage
+* Company name matching
+* Relevance ranking
+* No manual ticker catalog maintenance
+
+---
+
+## Architecture Changes
+
+### Backend
+
+Added:
+
+* Search Service Layer
+* Search API Endpoint
+* Search Response Schemas
+
+Responsibilities:
+
+* Query external provider
+* Normalize responses
+* Cache results
+* Handle failures gracefully
+
+---
+
+### Frontend
+
+Added:
+
+* Search API hooks
+* Search result types
+* Suggestion dropdown component
+* Search query utilities
+
+Responsibilities:
+
+* Debounced search requests
+* Suggestion rendering
+* Selection handling
+* Keyboard interactions
+
+---
+
+## Search Flow
+
+User Types:
+
+mtar
+
+↓
+
+Frontend Debounce
+
+↓
+
+Search Endpoint
+
+↓
+
+Yahoo Finance Search
+
+↓
+
+Results Returned
+
+↓
+
+Suggestions Displayed
+
+Example Result:
+
+* MTARTECH.NS
+* MTARTECH.BO
+
+---
+
+## User Experience Improvements
+
+Before:
+
+User must know exact ticker.
+
+Example:
+
+HDFCBANK.NS
+
+After:
+
+User can search naturally.
+
+Examples:
+
+* hdfc
+* reliance
+* tata
+* infosys
+
+Result:
+
+* Easier stock discovery
+* Better onboarding experience
+* Reduced user friction
+
+---
+
+## Technical Improvements
+
+### Debounced Requests
+
+Search requests are delayed briefly while typing.
+
+Benefits:
+
+* Reduced API calls
+* Better performance
+* Improved responsiveness
+
+---
+
+### Cached Results
+
+Frequently requested searches are cached.
+
+Benefits:
+
+* Faster repeat searches
+* Reduced provider load
+
+---
+
+### Error Handling
+
+Implemented graceful failure states.
+
+Examples:
+
+* Provider unavailable
+* Network failure
+* Empty search results
+
+Benefits:
+
+* Better resilience
+* Improved user feedback
+
+---
+
+## Outcome
+
+Sprint 10B successfully transformed search into an intelligent discovery system.
+
+Users no longer need exact ticker knowledge to find stocks.
+
+This sprint significantly improves usability and onboarding while creating the foundation for future recommendation systems.
+
+Future Expansion:
+
+* Popular Stocks
+* High Confidence Suggestions
+* Recommendation Ranking
+* Signal-Aware Search
+
+Status: COMPLETE
