@@ -1742,3 +1742,367 @@ Future Expansion:
 * Push Notifications
 
 Status: COMPLETE
+# Sprint 11B — Notification Center
+
+## Objective
+
+Transform Insique's Alert Engine into a proactive user notification system by delivering triggered alerts directly inside the platform.
+
+---
+
+## Problem Statement
+
+Sprint 11A introduced automated alert evaluation and trigger detection.
+
+However, users still needed to manually review alert history to discover whether an alert had fired.
+
+Workflow before Sprint 11B:
+
+Alert triggers
+
+↓
+
+Trigger stored in database
+
+↓
+
+User manually opens Alerts page
+
+↓
+
+User checks trigger history
+
+This reduced the practical value of alerts because important events could still be overlooked.
+
+---
+
+## Features Implemented
+
+### In-App Notifications
+
+Introduced a centralized notification system for triggered alerts.
+
+When an alert condition is met:
+
+Alert Trigger
+
+↓
+
+Notification Generated
+
+↓
+
+Displayed to User
+
+Benefits:
+
+* Immediate visibility
+* Reduced manual monitoring
+* Improved user awareness
+
+---
+
+### Notification Center
+
+Added a dedicated notification center accessible from the global navigation bar.
+
+Features:
+
+* Notification history
+* Unread indicators
+* Read indicators
+* Trigger timestamps
+
+Benefits:
+
+* Centralized alert visibility
+* Consistent user experience
+* Historical tracking
+
+---
+
+### Notification Bell
+
+Added a notification bell to the application top bar.
+
+Features:
+
+* Real-time unread count
+* Visual notification indicator
+* One-click access to notifications
+
+Benefits:
+
+* Increased discoverability
+* Familiar dashboard pattern
+* Faster access to important events
+
+---
+
+### Unread Tracking
+
+Implemented notification state management.
+
+States:
+
+* Unread
+* Read
+
+Benefits:
+
+* Prevents duplicate review
+* Improves organization
+* Enables future notification workflows
+
+---
+
+### Mark as Read
+
+Users can manually acknowledge notifications.
+
+Features:
+
+* Mark individual notifications as read
+* Update unread count automatically
+
+Benefits:
+
+* Better notification management
+* Cleaner notification experience
+
+---
+
+### Mark All as Read
+
+Added bulk notification management.
+
+Benefits:
+
+* Faster cleanup
+* Improved usability
+* Better handling of large notification volumes
+
+---
+
+## Architecture Changes
+
+### Database Layer
+
+Added:
+
+notifications
+
+Stores:
+
+* User reference
+* Alert reference
+* Trigger reference
+* Notification title
+* Notification content
+* Read status
+* Creation timestamp
+
+Benefits:
+
+* Separation from trigger history
+* Future notification channel support
+* Improved scalability
+
+---
+
+### Notification Pipeline
+
+Introduced a dedicated notification flow.
+
+Workflow:
+
+Alert Evaluation
+
+↓
+
+Trigger Created
+
+↓
+
+Notification Service
+
+↓
+
+Notification Record
+
+↓
+
+Notification Center
+
+Benefits:
+
+* Decoupled architecture
+* Future extensibility
+* Easier maintenance
+
+---
+
+### Backend Services
+
+Added:
+
+Notification Repository
+
+Notification Service
+
+Responsibilities:
+
+* Notification creation
+* Notification retrieval
+* Read state management
+* Unread count calculation
+
+---
+
+## API Layer
+
+Implemented endpoints for:
+
+* List Notifications
+* Get Notification Count
+* Mark Notification Read
+* Mark All Read
+* Notification Preferences
+
+Benefits:
+
+* Frontend integration
+* Consistent notification management
+* Future external channel support
+
+---
+
+## User Experience Improvements
+
+Before:
+
+Alert triggers
+
+↓
+
+Stored silently
+
+↓
+
+User must investigate manually
+
+After:
+
+Alert triggers
+
+↓
+
+Notification generated
+
+↓
+
+Bell count updates
+
+↓
+
+User opens notification center
+
+↓
+
+Notification reviewed
+
+Benefits:
+
+* Faster awareness
+* Reduced friction
+* Improved engagement
+
+---
+
+## Technical Improvements
+
+### Trigger-to-Notification Conversion
+
+Created a dedicated layer responsible for converting alert triggers into user-facing notifications.
+
+Benefits:
+
+* Cleaner architecture
+* Better separation of concerns
+* Multi-channel readiness
+
+---
+
+### Notification State Management
+
+Implemented efficient unread tracking.
+
+Benefits:
+
+* Accurate badge counts
+* Faster queries
+* Better user experience
+
+---
+
+### Indexed Notification Queries
+
+Added indexes for:
+
+* User notifications
+* Unread notifications
+* Notification timestamps
+
+Benefits:
+
+* Faster retrieval
+* Improved dashboard performance
+* Better scalability
+
+---
+
+## Testing & Validation
+
+Implemented:
+
+* Notification creation tests
+* Read/unread state tests
+* Notification retrieval tests
+* Notification count tests
+* Trigger integration tests
+
+Results:
+
+All tests passing
+
+No linting errors
+
+Production build successful
+
+Notification pipeline verified
+
+---
+
+## Outcome
+
+Sprint 11B successfully introduced the Notification Center.
+
+Insique can now:
+
+* Detect market conditions
+* Generate alerts automatically
+* Notify users inside the platform
+* Track read/unread notification status
+* Maintain notification history
+
+This sprint completes the first proactive monitoring workflow within Insique.
+
+Future Expansion:
+
+* Email Notifications
+* Telegram Notifications
+* Discord Notifications
+* Browser Push Notifications
+* Notification Preferences
+
+Status: COMPLETE
