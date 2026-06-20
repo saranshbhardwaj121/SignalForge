@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     login_rate_limit_window_seconds: int = 60
 
 
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

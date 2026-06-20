@@ -11,6 +11,7 @@ export const queryKeys = {
   marketData: {
     quote: (ticker: string) => ["market-data", "quote", ticker] as const,
     history: (ticker: string) => ["market-data", "history", ticker] as const,
+    search: (query: string) => ["market-data", "search", query] as const,
   },
   analytics: {
     sma: (ticker: string) => ["analytics", ticker, "sma"] as const,
@@ -20,5 +21,10 @@ export const queryKeys = {
   },
   signals: {
     ticker: (ticker: string) => ["signals", ticker] as const,
+  },
+  alerts: {
+    all: ["alerts"] as const,
+    detail: (id: string) => ["alerts", id] as const,
+    triggers: (id: string) => ["alerts", id, "triggers"] as const,
   },
 } as const;

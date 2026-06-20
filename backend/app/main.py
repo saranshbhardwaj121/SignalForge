@@ -1,12 +1,23 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.router import api_router
 from backend.app.core.config import get_settings
+from backend.app.services.scheduler import start_alert_scheduler, stop_alert_scheduler
 
 settings = get_settings()
 
-app = FastAPI(title=settings.app_name, debug=settings.debug)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_alert_scheduler()
+    yield
+    stop_alert_scheduler()
+
+
+app = FastAPI(title=settings.app_name, debug=settings.debug, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

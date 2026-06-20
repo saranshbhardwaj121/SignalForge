@@ -20,6 +20,7 @@ export const API_ROUTES = {
   MARKET_DATA: {
     QUOTE: (ticker: string) => `/market-data/quote/${ticker}`,
     HISTORY: (ticker: string) => `/market-data/history/${ticker}`,
+    SEARCH: (query: string) => `/market-data/search?q=${encodeURIComponent(query)}`,
   },
   ANALYTICS: {
     SMA: (ticker: string) => `/analytics/${ticker}/sma`,
@@ -29,5 +30,13 @@ export const API_ROUTES = {
   },
   SIGNALS: {
     TICKER: (ticker: string) => `/signals/${ticker}`,
+  },
+  ALERTS: {
+    LIST: "/alerts",
+    CREATE: "/alerts",
+    DETAIL: (id: string) => `/alerts/${id}`,
+    UPDATE: (id: string) => `/alerts/${id}`,
+    DELETE: (id: string) => `/alerts/${id}`,
+    TRIGGERS: (id: string) => `/alerts/${id}/triggers`,
   },
 } as const;
