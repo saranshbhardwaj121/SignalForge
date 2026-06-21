@@ -7,6 +7,7 @@ export function useSmaQuery(ticker: string | null) {
     queryKey: queryKeys.analytics.sma(ticker ?? ""),
     queryFn: () => getSma(ticker!),
     enabled: !!ticker,
+    staleTime: 60_000,
   });
 }
 
@@ -15,6 +16,7 @@ export function useEmaQuery(ticker: string | null) {
     queryKey: queryKeys.analytics.ema(ticker ?? ""),
     queryFn: () => getEma(ticker!),
     enabled: !!ticker,
+    staleTime: 60_000,
   });
 }
 
@@ -23,6 +25,7 @@ export function useRsiQuery(ticker: string | null) {
     queryKey: queryKeys.analytics.rsi(ticker ?? ""),
     queryFn: () => getRsi(ticker!),
     enabled: !!ticker,
+    staleTime: 60_000,
   });
 }
 
@@ -31,6 +34,7 @@ export function useMacdQuery(ticker: string | null) {
     queryKey: queryKeys.analytics.macd(ticker ?? ""),
     queryFn: () => getMacd(ticker!),
     enabled: !!ticker,
+    staleTime: 60_000,
   });
 }
 

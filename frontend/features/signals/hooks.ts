@@ -7,6 +7,7 @@ export function useTickerSignalQuery(ticker: string | null) {
     queryKey: queryKeys.signals.ticker(ticker ?? ""),
     queryFn: () => getTickerSignal(ticker!),
     enabled: !!ticker,
+    staleTime: 60_000,
   });
 }
 
@@ -15,5 +16,6 @@ export function useWatchlistSignalsQuery(watchlistId: string | null) {
     queryKey: queryKeys.watchlists.signals(watchlistId ?? ""),
     queryFn: () => getWatchlistSignals(watchlistId!),
     enabled: !!watchlistId,
+    staleTime: 60_000,
   });
 }

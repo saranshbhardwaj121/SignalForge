@@ -15,6 +15,7 @@ export function useWatchlistsQuery() {
   return useQuery({
     queryKey: queryKeys.watchlists.all,
     queryFn: listWatchlists,
+    staleTime: 120_000,
   });
 }
 
@@ -23,6 +24,7 @@ export function useWatchlistQuotesQuery(watchlistId: string | null) {
     queryKey: queryKeys.watchlists.quotes(watchlistId ?? ""),
     queryFn: () => getWatchlistQuotes(watchlistId!),
     enabled: !!watchlistId,
+    staleTime: 60_000,
   });
 }
 

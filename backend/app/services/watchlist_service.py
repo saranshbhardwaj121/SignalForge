@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -62,7 +63,6 @@ class WatchlistService:
     def get_watchlist_quotes(self, user: User, watchlist_id: UUID) -> WatchlistQuotesResponse:
         watchlist = self.get_watchlist(user, watchlist_id)
         fetched_at = datetime.now(timezone.utc)
-        market_data_service = MarketDataService(self.session)
 
         seen: set[str] = set()
         unique_ordered_tickers: list[str] = []
@@ -71,34 +71,21 @@ class WatchlistService:
                 seen.add(item.ticker)
                 unique_ordered_tickers.append(item.ticker)
 
-        quotes: list[WatchlistQuoteItemRead] = []
-        for ticker in unique_ordered_tickers:
-            try:
-                quote = market_data_service.get_quote(ticker)
-                quotes.append(
-                    WatchlistQuoteItemRead(
-                        ticker=quote.ticker,
-                        name=quote.name,
-                        currency=quote.currency,
-                        price=quote.price,
-                        previous_close=quote.previous_close,
-                        open=quote.open,
-                        day_high=quote.day_high,
-                        day_low=quote.day_low,
-                        volume=quote.volume,
-                        market_cap=quote.market_cap,
-                        exchange=quote.exchange,
-                        provider=quote.provider,
-                        fetched_at=quote.fetched_at,
+        quotes_map: dict[str, WatchlistQuoteItemRead] = {}
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_map = {
+                executor.submit(self._fetch_single_quote, ticker): ticker
+                for ticker in unique_ordered_tickers
+            }
+            for future in as_completed(future_map):
+                ticker = future_map[future]
+                try:
+                    quotes_map[ticker] = future.result()
+                except Exception:
+                    quotes_map[ticker] = WatchlistQuoteItemRead(
+                        ticker=ticker, error="Quote fetch failed"
                     )
-                )
-            except (MarketDataValidationError, MarketDataProviderError) as exc:
-                quotes.append(
-                    WatchlistQuoteItemRead(
-                        ticker=ticker,
-                        error=str(exc),
-                    )
-                )
+        quotes = [quotes_map[t] for t in unique_ordered_tickers if t in quotes_map]
 
         return WatchlistQuotesResponse(
             watchlist_id=watchlist.id,
@@ -106,6 +93,28 @@ class WatchlistService:
             quotes=quotes,
             fetched_at=fetched_at,
         )
+
+    def _fetch_single_quote(self, ticker: str) -> WatchlistQuoteItemRead:
+        market_data_service = MarketDataService(self.session)
+        try:
+            quote = market_data_service.get_quote(ticker)
+            return WatchlistQuoteItemRead(
+                ticker=quote.ticker,
+                name=quote.name,
+                currency=quote.currency,
+                price=quote.price,
+                previous_close=quote.previous_close,
+                open=quote.open,
+                day_high=quote.day_high,
+                day_low=quote.day_low,
+                volume=quote.volume,
+                market_cap=quote.market_cap,
+                exchange=quote.exchange,
+                provider=quote.provider,
+                fetched_at=quote.fetched_at,
+            )
+        except (MarketDataValidationError, MarketDataProviderError) as exc:
+            return WatchlistQuoteItemRead(ticker=ticker, error=str(exc))
 
     def get_watchlist_signals(
         self,
@@ -127,34 +136,39 @@ class WatchlistService:
     ) -> WatchlistSignalsResponse:
         watchlist = self.get_watchlist(user, watchlist_id)
         generated_at = datetime.now(timezone.utc)
-        signal_service = SignalService(self.session)
 
-        signals: list[WatchlistSignalItemRead] = []
-        for item in watchlist.items:
-            try:
-                summary = signal_service.get_signal_summary(
-                    ticker=item.ticker,
-                    period=period,
-                    interval=interval,
-                    refresh=refresh,
-                    rsi_window=rsi_window,
-                    rsi_oversold=rsi_oversold,
-                    rsi_overbought=rsi_overbought,
-                    macd_fast=macd_fast,
-                    macd_slow=macd_slow,
-                    macd_signal=macd_signal,
-                    sma_short=sma_short,
-                    sma_long=sma_long,
-                    ema_short=ema_short,
-                    ema_long=ema_long,
-                )
-                signals.append(
-                    WatchlistSignalItemRead(ticker=item.ticker, summary=summary)
-                )
-            except (MarketDataValidationError, MarketDataProviderError) as exc:
-                signals.append(
-                    WatchlistSignalItemRead(ticker=item.ticker, error=str(exc))
-                )
+        params = {
+            "period": period,
+            "interval": interval,
+            "refresh": refresh,
+            "rsi_window": rsi_window,
+            "rsi_oversold": rsi_oversold,
+            "rsi_overbought": rsi_overbought,
+            "macd_fast": macd_fast,
+            "macd_slow": macd_slow,
+            "macd_signal": macd_signal,
+            "sma_short": sma_short,
+            "sma_long": sma_long,
+            "ema_short": ema_short,
+            "ema_long": ema_long,
+        }
+
+        tickers = [item.ticker for item in watchlist.items]
+        signals_map: dict[str, WatchlistSignalItemRead] = {}
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_map = {
+                executor.submit(self._fetch_single_signal, ticker, params): ticker
+                for ticker in tickers
+            }
+            for future in as_completed(future_map):
+                ticker = future_map[future]
+                try:
+                    signals_map[ticker] = future.result()
+                except Exception:
+                    signals_map[ticker] = WatchlistSignalItemRead(
+                        ticker=ticker, error="Signal fetch failed"
+                    )
+        signals = [signals_map[t] for t in tickers if t in signals_map]
 
         return WatchlistSignalsResponse(
             watchlist_id=watchlist.id,
@@ -176,6 +190,35 @@ class WatchlistService:
             signals=signals,
             generated_at=generated_at,
         )
+
+    def _fetch_single_signal(
+        self, ticker: str, params: dict
+    ) -> WatchlistSignalItemRead:
+        from backend.app.db.session import SessionLocal
+        session = SessionLocal()
+        try:
+            signal_service = SignalService(session)
+            summary = signal_service.get_signal_summary(
+                ticker=ticker,
+                period=params["period"],
+                interval=params["interval"],
+                refresh=params["refresh"],
+                rsi_window=params["rsi_window"],
+                rsi_oversold=params["rsi_oversold"],
+                rsi_overbought=params["rsi_overbought"],
+                macd_fast=params["macd_fast"],
+                macd_slow=params["macd_slow"],
+                macd_signal=params["macd_signal"],
+                sma_short=params["sma_short"],
+                sma_long=params["sma_long"],
+                ema_short=params["ema_short"],
+                ema_long=params["ema_long"],
+            )
+            return WatchlistSignalItemRead(ticker=ticker, summary=summary)
+        except (MarketDataValidationError, MarketDataProviderError) as exc:
+            return WatchlistSignalItemRead(ticker=ticker, error=str(exc))
+        finally:
+            session.close()
 
     def rename_watchlist(self, user: User, watchlist_id: UUID, name: str) -> Watchlist:
         name = self._normalize_name(name)

@@ -12,6 +12,7 @@ from backend.app.core.config import get_settings
 from backend.app.models.market_data import MarketData
 from backend.app.repositories.market_data_repository import MarketDataRepository
 from backend.app.schemas.market_data import HistoricalBarRead, HistoricalDataResponse, QuoteRead
+from backend.app.services.cache import quote_cache
 
 
 class MarketDataValidationError(ValueError):
@@ -44,6 +45,9 @@ class MarketDataService:
 
     def get_quote(self, ticker: str) -> QuoteRead:
         normalized = self.normalize_ticker(ticker)
+        cached = quote_cache.get(normalized)
+        if cached is not None:
+            return cached
         fetched_at = datetime.now(timezone.utc)
         try:
             provider_ticker = yf.Ticker(normalized)
@@ -56,7 +60,7 @@ class MarketDataService:
         if price is None:
             price = self._read_float(info, "regularMarketPrice", "currentPrice")
 
-        return QuoteRead(
+        result = QuoteRead(
             ticker=normalized,
             name=self._read_str(info, "shortName", "longName"),
             currency=self._read_str(fast_info, "currency") or self._read_str(info, "currency"),
@@ -76,6 +80,8 @@ class MarketDataService:
             provider="yfinance",
             fetched_at=fetched_at,
         )
+        quote_cache.set(normalized, result)
+        return result
 
     def get_history(
         self,

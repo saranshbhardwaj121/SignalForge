@@ -67,3 +67,16 @@ class TriggeredAlertRepository:
             )
         )
         return result or 0
+
+    def count_for_alerts(self, alert_ids: list[UUID]) -> dict[UUID, int]:
+        if not alert_ids:
+            return {}
+        rows = self.session.execute(
+            select(
+                TriggeredAlert.alert_id,
+                func.count().label("cnt"),
+            )
+            .where(TriggeredAlert.alert_id.in_(alert_ids))
+            .group_by(TriggeredAlert.alert_id)
+        ).all()
+        return {row.alert_id: row.cnt for row in rows}

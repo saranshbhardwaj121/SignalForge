@@ -39,6 +39,14 @@ class AlertService:
     def list_alerts(self, user: User, status: str | None = None) -> list[Alert]:
         return list(self.alert_repo.list_for_user(user.id, status))
 
+    def list_alerts_with_counts(self, user: User, status: str | None = None) -> list[tuple[Alert, int]]:
+        alerts = self.list_alerts(user, status)
+        if not alerts:
+            return []
+        alert_ids = [a.id for a in alerts]
+        counts = self.trigger_repo.count_for_alerts(alert_ids)
+        return [(alert, counts.get(alert.id, 0)) for alert in alerts]
+
     def get_alert(self, user: User, alert_id: UUID) -> Alert:
         alert = self.alert_repo.get_owned_by_id(user.id, alert_id)
         if alert is None:

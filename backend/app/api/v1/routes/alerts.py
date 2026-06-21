@@ -18,13 +18,13 @@ def list_alerts(
     session: Session = Depends(get_session),
 ) -> list[AlertRead]:
     service = AlertService(session)
-    alerts = service.list_alerts(current_user, status)
+    alerts_with_counts = service.list_alerts_with_counts(current_user, status)
     return [
         AlertRead(
             **alert.__dict__,
-            trigger_count=service.get_trigger_count(alert.id),
+            trigger_count=count,
         )
-        for alert in alerts
+        for alert, count in alerts_with_counts
     ]
 
 
