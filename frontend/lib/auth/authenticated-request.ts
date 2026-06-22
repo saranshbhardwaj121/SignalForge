@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { setAuthCookies } from "@/lib/auth/session";
 
-const FASTAPI_BASE = process.env.FASTAPI_BASE_URL || "http://localhost:8000/api/v1";
+function resolveFastApiBase(): string {
+  const url = process.env.FASTAPI_BASE_URL;
+  if (!url) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "FASTAPI_BASE_URL environment variable is required in production. "
+        + "Set it to the backend API URL (e.g. https://api.insique.app/api/v1)."
+      );
+    }
+    console.warn(
+      "[insique] FASTAPI_BASE_URL not set. Defaulting to http://localhost:8000/api/v1. "
+      + "Create frontend/.env or set the environment variable."
+    );
+    return "http://localhost:8000/api/v1";
+  }
+  return url;
+}
+
+const FASTAPI_BASE = resolveFastApiBase();
 
 async function execRequest(
   token: string,

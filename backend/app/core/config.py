@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 30
     database_url: str
     jwt_algorithm: str = "HS256"
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:8501"])
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
     market_data_cache_days: int = 7
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 60
