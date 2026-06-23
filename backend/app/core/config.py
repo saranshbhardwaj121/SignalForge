@@ -10,8 +10,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=str(PROJECT_ROOT / ".env"),
+        env_file=str(PROJECT_ROOT / ".env") if (PROJECT_ROOT / ".env").exists() else None,
         env_file_encoding="utf-8",
+        env_ignore_empty=True,
         extra="ignore",
     )
 
