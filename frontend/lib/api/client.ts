@@ -1,7 +1,7 @@
 import { parseErrorResponse, ApiError } from "@/lib/api/errors";
 
 function resolveApiBaseUrl(): string {
-  const url = process.env.FASTAPI_BASE_URL;
+  const url = process.env.NEXT_PUBLIC_FASTAPI_BASE_URL;
   if (!url) {
     if (process.env.NODE_ENV === "production") {
       throw new Error(
