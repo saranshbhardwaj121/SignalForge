@@ -2,8 +2,19 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/api/query-keys";
-import { loginUser, registerUser, logoutUser } from "@/features/auth/api";
-import type { LoginRequest, RegisterRequest } from "@/features/auth/types";
+import {
+  loginUser,
+  registerUser,
+  logoutUser,
+  forgotPassword,
+  resetPassword,
+} from "@/features/auth/api";
+import type {
+  LoginRequest,
+  RegisterRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+} from "@/features/auth/types";
 
 export function useLoginMutation() {
   const queryClient = useQueryClient();
@@ -25,6 +36,23 @@ export function useRegisterMutation() {
     mutationFn: (data: RegisterRequest) => registerUser(data),
     onSuccess: () => {
       router.push("/login");
+    },
+  });
+}
+
+export function useForgotPasswordMutation() {
+  return useMutation({
+    mutationFn: (data: ForgotPasswordRequest) => forgotPassword(data),
+  });
+}
+
+export function useResetPasswordMutation() {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (data: ResetPasswordRequest) => resetPassword(data),
+    onSuccess: () => {
+      setTimeout(() => router.push("/login"), 3000);
     },
   });
 }

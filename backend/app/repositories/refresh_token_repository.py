@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from backend.app.models.refresh_token import RefreshToken
@@ -29,3 +29,16 @@ class RefreshTokenRepository:
             return False
         token.revoked_at = datetime.now(timezone.utc)
         return True
+
+    def revoke_all_by_user_id(self, user_id) -> int:
+        now = datetime.now(timezone.utc)
+        statement = (
+            update(RefreshToken)
+            .where(
+                RefreshToken.user_id == user_id,
+                RefreshToken.revoked_at.is_(None),
+            )
+            .values(revoked_at=now)
+        )
+        result = self.session.execute(statement)
+        return result.rowcount

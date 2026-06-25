@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
+from backend.app.core.config import get_settings
 from backend.app.core.security import (
     create_access_token,
+    create_password_reset_token,
     create_refresh_token,
     decode_token,
     get_token_expiration,
@@ -18,6 +20,7 @@ from backend.app.models.refresh_token import RefreshToken
 from backend.app.models.user import User
 from backend.app.repositories.refresh_token_repository import RefreshTokenRepository
 from backend.app.repositories.user_repository import UserRepository
+from backend.app.services.email_service import send_password_reset_email
 
 
 class AuthService:
@@ -90,6 +93,40 @@ class AuthService:
         if user is None or not user.is_active:
             raise ValueError("Invalid refresh token")
         return user
+
+    def create_password_reset_token(self, user_id: UUID) -> str:
+        settings = get_settings()
+        return create_password_reset_token(
+            subject=str(user_id),
+            expires_minutes=settings.password_reset_expire_minutes,
+        )
+
+    def verify_password_reset_token(self, token: str) -> UUID:
+        payload = decode_token(token)
+        purpose = payload.get("purpose")
+        subject = payload.get("sub")
+        if purpose != "password_reset" or subject is None:
+            raise ValueError("Invalid or expired password reset token")
+        return UUID(subject)
+
+    def reset_password(self, user_id: UUID, new_password: str) -> None:
+        user = self.users.get_by_id(user_id)
+        if user is None or not user.is_active:
+            raise ValueError("User not found")
+        user.password_hash = hash_password(new_password)
+        revoked = self.refresh_tokens.revoke_all_by_user_id(user_id)
+        if revoked:
+            logger.info("Revoked %d refresh tokens for user %s", revoked, user_id)
+        self.session.commit()
+
+    def send_password_reset_email(self, email: str) -> bool:
+        user = self.users.get_by_email(email)
+        if user is None or not user.is_active:
+            return False
+        token = self.create_password_reset_token(user.id)
+        settings = get_settings()
+        reset_url = f"{settings.frontend_url}/reset-password?token={token}"
+        return send_password_reset_email(to_email=email, reset_url=reset_url)
 
     def revoke_refresh_token(self, refresh_token: str) -> bool:
         payload = decode_token(refresh_token)

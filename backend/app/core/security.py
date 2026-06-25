@@ -52,6 +52,17 @@ def create_refresh_token(subject: str, expires_delta: timedelta | None = None) -
     return jwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)
 
 
+def create_password_reset_token(subject: str, expires_minutes: int = 15) -> str:
+    settings = get_settings()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "exp": expire,
+        "purpose": "password_reset",
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)
+
+
 def decode_token(token: str) -> dict[str, Any]:
     settings = get_settings()
     try:

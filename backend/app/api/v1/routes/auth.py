@@ -10,10 +10,13 @@ from backend.app.core.config import get_settings
 from backend.app.models.user import User
 from backend.app.schemas.auth import (
     AuthTokensResponse,
+    ForgotPasswordRequest,
     LoginRequest,
     LogoutRequest,
+    PasswordResetResponse,
     RefreshTokenRequest,
     RegisterRequest,
+    ResetPasswordRequest,
 )
 from backend.app.schemas.user import UserRead
 from backend.app.services.auth_service import AuthService
@@ -24,6 +27,10 @@ settings = get_settings()
 login_rate_limiter = LoginRateLimiter(
     max_attempts=settings.login_rate_limit_attempts,
     window_seconds=settings.login_rate_limit_window_seconds,
+)
+forgot_password_rate_limiter = LoginRateLimiter(
+    max_attempts=settings.forgot_password_rate_limit_attempts,
+    window_seconds=settings.forgot_password_rate_limit_window_minutes * 60,
 )
 
 
@@ -107,6 +114,45 @@ def logout(payload: LogoutRequest, session: Session = Depends(get_session)) -> N
             detail=str(exc),
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
+
+
+@router.post("/forgot-password", response_model=PasswordResetResponse)
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> PasswordResetResponse:
+    rate_limit_key = f"forgot_pwd:{request.client.host}" if request.client else payload.email
+    if not forgot_password_rate_limiter.is_allowed(rate_limit_key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests. Try again later.",
+        )
+
+    forgot_password_rate_limiter.register_failure(rate_limit_key)
+    service = AuthService(session)
+    service.send_password_reset_email(payload.email)
+    return PasswordResetResponse(
+        message="If an account exists, a password reset link has been sent."
+    )
+
+
+@router.post("/reset-password", response_model=PasswordResetResponse)
+def reset_password(
+    payload: ResetPasswordRequest,
+    session: Session = Depends(get_session),
+) -> PasswordResetResponse:
+    service = AuthService(session)
+    try:
+        user_id = service.verify_password_reset_token(payload.token)
+        service.reset_password(user_id, payload.password)
+    except (ValueError, Exception) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+    return PasswordResetResponse(message="Password has been reset successfully.")
 
 
 @router.get("/me", response_model=UserRead)

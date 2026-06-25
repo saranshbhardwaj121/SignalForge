@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     market_data_cache_days: int = 7
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 60
+    resend_api_key: str = ""
+    from_email: str = ""
+    frontend_url: str = "http://localhost:3000"
+    password_reset_expire_minutes: int = 15
+    forgot_password_rate_limit_attempts: int = 5
+    forgot_password_rate_limit_window_minutes: int = 15
 
     @field_validator("database_url")
     @classmethod
