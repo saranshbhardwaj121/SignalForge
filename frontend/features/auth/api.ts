@@ -7,6 +7,7 @@ import type {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   PasswordResetResponse,
+  DeleteAccountRequest,
 } from "@/features/auth/types";
 
 export async function loginUser(data: LoginRequest): Promise<User> {
@@ -46,6 +47,13 @@ export async function forgotPassword(data: ForgotPasswordRequest): Promise<Passw
 export async function resetPassword(data: ResetPasswordRequest): Promise<PasswordResetResponse> {
   return clientFetch<PasswordResetResponse>(API_ROUTES.AUTH.RESET_PASSWORD, {
     method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAccount(data: DeleteAccountRequest): Promise<void> {
+  await clientFetch<void>(API_ROUTES.AUTH.DELETE_ACCOUNT, {
+    method: "DELETE",
     body: JSON.stringify(data),
   });
 }

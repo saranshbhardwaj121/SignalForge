@@ -21,3 +21,10 @@ class UserRepository(BaseRepository[User]):
     def get_by_email(self, email: str) -> User | None:
         statement = select(User).where(User.email == email)
         return self.session.scalar(statement)
+
+    def delete_by_id(self, user_id: UUID) -> bool:
+        user = self.session.get(User, user_id)
+        if user is None:
+            return False
+        self.session.delete(user)
+        return True

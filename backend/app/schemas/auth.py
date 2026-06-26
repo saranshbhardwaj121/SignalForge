@@ -40,3 +40,7 @@ class ResetPasswordRequest(BaseModel):
 
 class PasswordResetResponse(BaseModel):
     message: str
+
+
+class DeleteAccountRequest(BaseModel):
+    password: str = Field(min_length=8, max_length=128)

@@ -10,6 +10,7 @@ from backend.app.core.config import get_settings
 from backend.app.models.user import User
 from backend.app.schemas.auth import (
     AuthTokensResponse,
+    DeleteAccountRequest,
     ForgotPasswordRequest,
     LoginRequest,
     LogoutRequest,
@@ -153,6 +154,22 @@ def reset_password(
         ) from exc
 
     return PasswordResetResponse(message="Password has been reset successfully.")
+
+
+@router.delete("/delete-account", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(
+    payload: DeleteAccountRequest,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> None:
+    service = AuthService(session)
+    try:
+        service.delete_account(current_user.id, payload.password)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
 
 
 @router.get("/me", response_model=UserRead)

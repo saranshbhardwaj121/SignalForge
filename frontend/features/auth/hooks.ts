@@ -8,12 +8,14 @@ import {
   logoutUser,
   forgotPassword,
   resetPassword,
+  deleteAccount,
 } from "@/features/auth/api";
 import type {
   LoginRequest,
   RegisterRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  DeleteAccountRequest,
 } from "@/features/auth/types";
 
 export function useLoginMutation() {
@@ -53,6 +55,19 @@ export function useResetPasswordMutation() {
     mutationFn: (data: ResetPasswordRequest) => resetPassword(data),
     onSuccess: () => {
       setTimeout(() => router.push("/login"), 3000);
+    },
+  });
+}
+
+export function useDeleteAccountMutation() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (data: DeleteAccountRequest) => deleteAccount(data),
+    onSuccess: () => {
+      queryClient.setQueryData(queryKeys.auth.me, null);
+      router.push("/login");
     },
   });
 }

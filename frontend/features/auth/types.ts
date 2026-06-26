@@ -36,3 +36,7 @@ export interface ResetPasswordRequest {
 export interface PasswordResetResponse {
   message: string;
 }
+
+export interface DeleteAccountRequest {
+  password: string;
+}

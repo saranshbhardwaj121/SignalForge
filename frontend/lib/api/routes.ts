@@ -7,6 +7,7 @@ export const API_ROUTES = {
     ME: "/auth/me",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
+    DELETE_ACCOUNT: "/auth/delete-account",
   },
   WATCHLISTS: {
     LIST: "/watchlists",

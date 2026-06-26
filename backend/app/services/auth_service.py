@@ -128,6 +128,18 @@ class AuthService:
         reset_url = f"{settings.frontend_url}/reset-password?token={token}"
         return send_password_reset_email(to_email=email, reset_url=reset_url)
 
+    def delete_account(self, user_id: UUID, password: str) -> None:
+        user = self.users.get_by_id(user_id)
+        if user is None or not user.is_active:
+            raise ValueError("User not found")
+        if not verify_password(password, user.password_hash):
+            raise ValueError("Invalid password")
+        revoked = self.refresh_tokens.revoke_all_by_user_id(user_id)
+        if revoked:
+            logger.info("Revoked %d refresh tokens for user %s", revoked, user_id)
+        self.users.delete_by_id(user_id)
+        self.session.commit()
+
     def revoke_refresh_token(self, refresh_token: str) -> bool:
         payload = decode_token(refresh_token)
         jti = payload.get("jti")
