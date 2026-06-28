@@ -1,3 +1,4 @@
+import { Signal } from "lucide-react";
 import Link from "next/link";
 
 export function Footer() {
@@ -7,9 +8,7 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-8 sm:flex-row">
           <div>
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-                <span className="text-[10px] font-bold text-primary-foreground">I</span>
-              </div>
+              <Signal className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold">Insique</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
